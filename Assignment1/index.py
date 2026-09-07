@@ -1,77 +1,51 @@
-"""
-This program takes in 4 documents and will create an inverse index of the words in the documents.
-"""
+#-------------------------------------------------------------------------
+# AUTHOR: Diego Mejia
+# FILENAME: index.py
+# SPECIFICATION: description of the program
+# FOR: CS 4250 - Assignment #1
+# TIME SPENT: 3 hrs (whole assignment)
+#-------------------------------------------------------------------------
 
-def lemmatize(word): 
-    """
-    Lemmatize the word using a map.
+# Importing Python libraries
+import pandas as pd
 
-    Args:
-        word (str): The word to be lemmatized.
-    Returns:
-        str: The lemmatized form of the word.
-    """
+# Reading the document collection
+data = pd.read_csv("collection.csv")
 
-    lemmatize_map = {
-        "increases": "increase",
-        "rising": "rise",
-        "increasing": "increase",
-        "sales": "sale",
-        "homes": "home"
-    }
+# Defining the dictionary used for lemmatization
+lemmas = {
+    "increases": "increase",
+    "rising": "rise",
+    "increasing": "increase",
+    "sales": "sale",
+    "homes": "home"
+}
 
-    return lemmatize_map.get(word, word)  # Return the lemmatized word if found, else return the original word
+# Creating the data structure that will store the inverted index
+invertedIndex = {}
 
+# Processing each document in the collection
+for i, row in data.iterrows():
+    docID = row["Document"]
+    text = row["Text"]
+# Applying surface-level normalization
+    text = text.lower().strip('.,')
+# Tokenizing the document
+    words = text.split()
+# Applying lemmatization
+    words = [lemmas.get(word, word) for word in words]
+# Building the inverted index
+    for word in words:
+        if word not in invertedIndex:
+            invertedIndex[word] = []
+        if docID not in invertedIndex[word]:
+            invertedIndex[word].append(docID)
+# Printing the inverted index with terms ordered alphabetically
+# Expected format:
+# term1 : ['Doc1', 'Doc2']
+# term2 : ['Doc3']
 
-def create_inverse_index(documents):
-    """ 
-    Creates an inverse index in the format: {word: {doc_id: frequency}}
-
-    Args:
-        documents (dict): A dictionary of documents with their id and text
-    Returns:
-        dict: An inverse index in the format: {word: {doc_id: frequency}}
-    """
-
-    inverse_index = {}
-
-    for doc_id, text in documents.items():
-
-        # Tokenize the text into words, convert to lowercase, remove punctuation
-        words = [word for word in text.lower().split()]
-        words = [word.strip('.,') for word in words]  # Remove punctuation
-
-        for word in words:
-            lemmatized = lemmatize(word)
-
-            # Update the inverse index with the lemmatized word and its frequency in the document
-            if lemmatized not in inverse_index:
-                inverse_index[lemmatized] = {}
-            if doc_id not in inverse_index[lemmatized]:
-                inverse_index[lemmatized][doc_id] = 0
-            inverse_index[lemmatized][doc_id] += 1
-
-    return inverse_index
-
-
-def main():
-
-    # Define the documents
-
-    documents = {
-        1: "New homes sale increases.",
-        2: "Home sale rising in July.",
-        3: "Increasing home sales in July.",
-        4: "July new home sales rise."
-    }
-
-    inverse_index = create_inverse_index(documents)
-
-    print("\nInverse Index:\n")
-    for key, value in inverse_index.items():
-        print(f"{key}: {value}")
-    print()
-
-
-if __name__ == "__main__":
-    main()
+print("\nInverted Index:\n")
+for word in sorted(invertedIndex.keys()):
+    print(f"{word}: {invertedIndex[word]}")
+print()
